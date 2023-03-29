@@ -10,8 +10,9 @@ pipe = FAQPipeline(retriever=retriever)
 
 from haystack.utils import print_answers
 
-# Run any question and change top_k to see more or less answers
-prediction = pipe.run(query="How is the virus spreading?", params={"Retriever": {"top_k": 1}})
 
-print_answers(prediction, details="medium")
+if __name__ == "__main__":
+  # Run any question and change top_k to see more or less answers
+  prediction = pipe.run(query="How is the virus spreading?", params={"Retriever": {"top_k": 1}})
+  print_answers(prediction, details="medium")
 
