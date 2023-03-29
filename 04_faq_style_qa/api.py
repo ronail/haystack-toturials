@@ -13,7 +13,7 @@ app = FastAPI()
 from ask import pipe
 @app.post("/query")
 def query(query: Query):
-    prediction = pipe.run(query=query.query, params={"Retriever": {"top_k": 1}})
+    prediction = pipe.run(query=query.query, params={**{"Retriever": {"top_k": 1}}, **query.params})
     return {"query": query.query, "answers": prediction["answers"]}
 
 if __name__ == "__main__":
