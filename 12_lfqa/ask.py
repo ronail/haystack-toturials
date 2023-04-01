@@ -28,9 +28,12 @@ from haystack.pipelines import GenerativeQAPipeline
 pipe = GenerativeQAPipeline(generator, retriever)
 
 query = input("What do you want to know?\n")
-if not query:
-    query = "Why is Arya Stark an unusual character?"
-print(f"Asking '{query}'...")    
-answer = pipe.run(query=query, params={"Retriever": {"top_k": 3}})
-print_answers(answer, details="minimum")
+while query != "bye":
+    if not query:
+        query = "Why is Arya Stark an unusual character?"
+    print(f"Asking '{query}'...")    
+    answer = pipe.run(query=query, params={"Retriever": {"top_k": 3}})
+    print_answers(answer, details="minimum")
+    query = input("Anything else do you want to know?\n")
+print("bye!")
 
