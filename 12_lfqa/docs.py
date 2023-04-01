@@ -4,15 +4,17 @@ from haystack.utils import convert_files_to_docs, fetch_archive_from_http, clean
 # doc_dir = "data/tutorial12"
 # s3_url = "https://s3.eu-central-1.amazonaws.com/deepset.ai-farm-qa/datasets/documents/wiki_gameofthrones_txt12.zip"
 # fetch_archive_from_http(url=s3_url, output_dir=doc_dir)
+# Convert files to dicts
+# docs = convert_files_to_docs(dir_path=doc_dir, clean_func=clean_wiki_text, split_paragraphs=True)
+
 
 from haystack.nodes import Crawler, PreProcessor
-
-doc_dir = "faq"
-host = "faq-domain"
+import os
+doc_dir = f"data/{os.environ.get('CRAWL_HOST','faq')}"
 # crawl Haystack docs, i.e. all pages that include haystack.deepset.ai/overview/
 crawler = Crawler(
     output_dir=doc_dir,
-    urls=[f"https://{host}"],
+    urls=[f"https://{os.environ.get('CRAWL_HOST')}"],
   crawler_depth=1
   )
 
@@ -31,14 +33,17 @@ preprocessor = PreProcessor(
 from haystack import Pipeline
 indexing_pipeline = Pipeline()
 # indexing_pipeline.add_node(component=crawler, name="Crawler", inputs=['File'])
+
+# importing existings archive
 from haystack.nodes import JsonConverter
 json_converter = JsonConverter()
 indexing_pipeline.add_node(component=json_converter, name="JsonConverter", inputs=["File"])
+indexing_pipeline.add_node(component=preprocessor, name="Preprocessore", inputs=["JsonConverter"])
+
 # If SSL error is raised on MacOS, follow this https://stackoverflow.com/a/46167270
 # indexing_pipeline.add_node(component=preprocessor, name="Preprocessore", inputs=["Crawler"])
-indexing_pipeline.add_node(component=preprocessor, name="Preprocessore", inputs=["JsonConverter"])
 # docs = indexing_pipeline.run_batch(params={"Crawler": {'return_documents': True}})["documents"]
 
 import os
 files_to_index = [doc_dir + "/" + f for f in os.listdir(doc_dir)]
-docs = indexing_pipeline.run_batch(file_paths=files_to_index)["documents"]
+docs = indexing_pipeline.run_batch(params={"JsonConverter": {'file_paths': files_to_index}})["documents"]
