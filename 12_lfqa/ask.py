@@ -27,10 +27,10 @@ from haystack.pipelines import GenerativeQAPipeline
 
 pipe = GenerativeQAPipeline(generator, retriever)
 
-answer = pipe.run(
-    query="How did Arya Stark's character get portrayed in a television adaptation?", params={"Retriever": {"top_k": 3}}
-)
-print_answers(answer, details="minimum")
-answer = pipe.run(query="Why is Arya Stark an unusual character?", params={"Retriever": {"top_k": 3}})
+query = input("What do you want to know?\n")
+if not query:
+    query = "Why is Arya Stark an unusual character?"
+print(f"Asking '{query}'...")    
+answer = pipe.run(query=query, params={"Retriever": {"top_k": 3}})
 print_answers(answer, details="minimum")
 
