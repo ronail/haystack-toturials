@@ -1,11 +1,11 @@
 from haystack.utils import (print_documents, print_answers)
 # from haystack.pipelines import DocumentSearchPipeline
-from docs import docs
 from document_store import document_store
 
 import os.path
 if not os.path.exists("index.faiss"):
 # Now, let's write the dicts containing documents to our DB.
+  from docs import docs
   document_store.write_documents(docs)
 
 
