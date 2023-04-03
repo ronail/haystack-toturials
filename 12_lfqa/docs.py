@@ -11,13 +11,9 @@ from haystack.utils import convert_files_to_docs, fetch_archive_from_http, clean
 from haystack.nodes import Crawler, PreProcessor
 import os
 doc_dir = f"data/{os.environ.get('CRAWL_HOST','faq')}"
-# crawl Haystack docs, i.e. all pages that include haystack.deepset.ai/overview/
-crawler = Crawler(
-    output_dir=doc_dir,
-    urls=[f"https://{os.environ.get('CRAWL_HOST')}"],
-  crawler_depth=1
-  )
 
+from haystack import Pipeline
+indexing_pipeline = Pipeline()
 
 preprocessor = PreProcessor(
     clean_empty_lines=True,
@@ -28,22 +24,27 @@ preprocessor = PreProcessor(
     split_respect_sentence_boundary=True,
 )
 
+if not os.path.isdir(doc_dir):
+  print(f"Crawling into {doc_dir}...") 
+  # crawl Haystack docs, i.e. all pages that include haystack.deepset.ai/overview/
+  crawler = Crawler(
+      output_dir=doc_dir,
+      urls=[f"https://{os.environ.get('CRAWL_HOST')}"],
+      crawler_depth=1
+  )
 
+  indexing_pipeline.add_node(component=crawler, name="Crawler", inputs=['File'])
+  # If SSL error is raised on MacOS, follow this https://stackoverflow.com/a/46167270
+  indexing_pipeline.add_node(component=preprocessor, name="Preprocessore", inputs=["Crawler"])
+  docs = indexing_pipeline.run_batch(params={"Crawler": {'return_documents': True}})["documents"]
+else:
+  print(f"Loading archive from {doc_dir}...") 
+  # importing existings archive
+  from haystack.nodes import JsonConverter
+  json_converter = JsonConverter()
+  indexing_pipeline.add_node(component=json_converter, name="JsonConverter", inputs=["File"])
+  indexing_pipeline.add_node(component=preprocessor, name="Preprocessore", inputs=["JsonConverter"])
 
-from haystack import Pipeline
-indexing_pipeline = Pipeline()
-# indexing_pipeline.add_node(component=crawler, name="Crawler", inputs=['File'])
-
-# importing existings archive
-from haystack.nodes import JsonConverter
-json_converter = JsonConverter()
-indexing_pipeline.add_node(component=json_converter, name="JsonConverter", inputs=["File"])
-indexing_pipeline.add_node(component=preprocessor, name="Preprocessore", inputs=["JsonConverter"])
-
-# If SSL error is raised on MacOS, follow this https://stackoverflow.com/a/46167270
-# indexing_pipeline.add_node(component=preprocessor, name="Preprocessore", inputs=["Crawler"])
-# docs = indexing_pipeline.run_batch(params={"Crawler": {'return_documents': True}})["documents"]
-
-import os
-files_to_index = [doc_dir + "/" + f for f in os.listdir(doc_dir)]
-docs = indexing_pipeline.run_batch(params={"JsonConverter": {'file_paths': files_to_index}})["documents"]
+  import os
+  files_to_index = [doc_dir + "/" + f for f in os.listdir(doc_dir)]
+  docs = indexing_pipeline.run_batch(params={"JsonConverter": {'file_paths': files_to_index}})["documents"]
