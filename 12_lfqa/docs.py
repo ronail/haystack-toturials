@@ -30,7 +30,7 @@ if not os.path.isdir(doc_dir):
   crawler = Crawler(
       output_dir=doc_dir,
       urls=[f"https://{os.environ.get('CRAWL_HOST')}"],
-      crawler_depth=1
+      crawler_depth=2
   )
 
   indexing_pipeline.add_node(component=crawler, name="Crawler", inputs=['File'])
